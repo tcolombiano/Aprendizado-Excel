@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Excel do Zero · Dashboard de Aprendizado</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --excel:#217346; --excel-2:#2e9e63; --excel-soft:#e6f4ec; --excel-line:#bfe3ce;
+    --bg:#eef2f5; --card:#fff; --text:#17212b; --muted:#64748b;
+    --border:#e2e8f0; --shadow:0 6px 20px rgba(16,32,54,.08);
+    --amber:#f59e0b; --blue:#2563eb; --purple:#7c3aed; --pink:#db2777;
+  }
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.55; padding-bottom:60px;
+  }
+
+  /* ---------- TOPBAR ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; gap:24px; flex-wrap:wrap;
+    padding:14px 26px;
+    background:linear-gradient(100deg,#185c37,#217346 45%,#2e9e63);
+    color:#fff; box-shadow:0 4px 18px rgba(16,60,40,.25);
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:220px}
+  .logo{
+    width:44px;height:44px;border-radius:11px;flex:none;
+    background:#fff;color:var(--excel);font-weight:800;font-size:15px;
+    display:grid;place-items:center;letter-spacing:.5px;
+    box-shadow:0 3px 10px rgba(0,0,0,.18);
+  }
+  .brand h1{font-size:17px;line-height:1.2;font-weight:700}
+  .brand p{font-size:11.5px;opacity:.85}
+
+  .progress-wrap{flex:1;min-width:230px}
+  .progress-info{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;opacity:.95}
+  .progress-info strong{font-size:13px}
+  .bar{height:9px;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden}
+  .fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#a7f3d0,#fff);
+        transition:width .5s cubic-bezier(.4,0,.2,1)}
+  .btn-ghost{
+    background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);
+    padding:8px 14px;border-radius:9px;font-size:12.5px;cursor:pointer;font-weight:600;
+    transition:.2s;
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,.3)}
+
+  /* ---------- LAYOUT ---------- */
+  main{max-width:1180px;margin:0 auto;padding:26px 20px}
+  .intro{
+    background:var(--card);border-radius:16px;padding:18px 22px;box-shadow:var(--shadow);
+    display:flex;gap:16px;align-items:flex-start;margin-bottom:26px;border-left:5px solid var(--excel);
+  }
+  .intro .ico{font-size:26px}
+  .intro h2{font-size:15.5px;margin-bottom:4px}
+  .intro p{font-size:13.5px;color:var(--muted)}
+
+  .modulo{margin-bottom:30px}
+  .mod-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .mod-ico{
+    width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
+    font-size:18px;background:var(--excel-soft);border:1px solid var(--excel-line);
+  }
+  .mod-head h3{font-size:15.5px}
+  .mod-head small{display:block;font-size:12px;color:var(--muted);font-weight:400}
+  .mod-count{
+    margin-left:auto;font-size:11.5px;font-weight:700;color:var(--excel);
+    background:var(--excel-soft);padding:4px 11px;border-radius:99px;border:1px solid var(--excel-line);
+  }
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px}
+
+  /* ---------- CARD DA AULA ---------- */
+  .card{
+    position:relative;background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:16px 16px 14px;cursor:pointer;
+    transition:transform .18s, box-shadow .18s, border-color .18s;
+    box-shadow:0 2px 6px rgba(16,32,54,.05); overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--excel-2);opacity:.35;transition:.2s;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--excel-line)}
+  .card:hover::before{opacity:1}
+  .card.done{background:linear-gradient(180deg,#f5fdf8,#fff);border-color:var(--excel-line)}
+  .card.done::before{opacity:1;background:var(--excel)}
+  .card-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+  .card-ico{font-size:19px}
+  .card-num{font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:.7px}
+  .card-check{
+    margin-left:auto;width:20px;height:20px;border-radius:50%;font-size:12px;
+    display:grid;place-items:center;border:1.5px solid var(--border);color:transparent;
+    transition:.2s;
+  }
+  .card.done .card-check{background:var(--excel);border-color:var(--excel);color:#fff}
+  .card h4{font-size:14px;line-height:1.3;margin-bottom:8px}
+  .card-foot{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+  .pill{background:#f1f5f9;padding:2px 8px;border-radius:99px;font-weight:600}
+  .mini{flex:1;height:5px;background:#eef2f6;border-radius:99px;overflow:hidden}
+  .mini i{display:block;height:100%;width:0;background:var(--excel-2);border-radius:99px;transition:width .4s}
+
+  /* ---------- MODAL ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(11,25,38,.55);backdrop-filter:blur(3px);
+    display:none;z-index:100;padding:24px 14px;overflow-y:auto;
+  }
+  .overlay.open{display:block;animation:fade .2s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{
+    max-width:760px;margin:0 auto;background:var(--card);border-radius:18px;
+    box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;animation:up .25s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+  .modal-head{
+    background:linear-gradient(100deg,#185c37,#2e9e63);color:#fff;
+    padding:20px 24px;display:flex;align-items:flex-start;gap:14px;
+  }
+  .modal-head .m-ico{font-size:28px;line-height:1}
+  .modal-head h2{font-size:19px;line-height:1.25;margin-bottom:5px}
+  .modal-head p{font-size:12.5px;opacity:.9}
+  .close{
+    margin-left:auto;background:rgba(255,255,255,.18);border:0;color:#fff;
+    width:34px;height:34px;border-radius:9px;font-size:20px;cursor:pointer;line-height:1;
+    transition:.2s;flex:none;
+  }
+  .close:hover{background:rgba(255,255,255,.35)}
+  .modal-body{padding:24px}
+  .obj{
+    background:var(--excel-soft);border:1px solid var(--excel-line);border-radius:11px;
+    padding:12px 15px;font-size:13.5px;margin-bottom:22px;
+  }
+  .obj strong{color:var(--excel)}
+  .sec-title{
+    font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    font-weight:800;margin:24px 0 12px;display:flex;align-items:center;gap:8px;
+  }
+  .sec-title::after{content:"";flex:1;height:1px;background:var(--border)}
+  .modal-body p{font-size:14px;margin-bottom:11px;color:#293646}
+  .modal-body ul{margin:0 0 14px 20px}
+  .modal-body li{font-size:14px;margin-bottom:6px;color:#293646}
+  .dica,.alerta{
+    border-radius:10px;padding:11px 14px;font-size:13.2px;margin:12px 0;
+  }
+  .dica{background:#fffbeb;border-left:4px solid var(--amber);color:#78350f}
+  .alerta{background:#fef2f2;border-left:4px solid #ef4444;color:#7f1d1d}
+  .formula{
+    display:block;background:#0f172a;color:#7dd3fc;font-family:'Consolas',monospace;
+    padding:11px 14px;border-radius:9px;font-size:13.5px;margin:10px 0;overflow-x:auto;
+    letter-spacing:.4px;
+  }
+  kbd{
+    background:#f1f5f9;border:1px solid #cbd5e1;border-bottom-width:2px;border-radius:5px;
+    padding:1px 6px;font-size:12px;font-family:inherit;font-weight:700;color:#334155;
+  }
+
+  /* checklist */
+  .task{
+    display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border-radius:10px;
+    border:1px solid var(--border);margin-bottom:8px;cursor:pointer;transition:.15s;
+    background:#fcfdfe;
+  }
+  .task:hover{border-color:var(--excel-line);background:#f8fdfa}
+  .task input{display:none}
+  .box{
+    width:19px;height:19px;border-radius:6px;border:1.8px solid #cbd5e1;flex:none;
+    display:grid;place-items:center;font-size:12px;color:transparent;transition:.15s;margin-top:2px;
+  }
+  .task.checked .box{background:var(--excel);border-color:var(--excel);color:#fff}
+  .task.checked .txt{text-decoration:line-through;color:var(--muted)}
+  .txt{font-size:13.6px}
+
+  /* quiz */
+  .quiz-q{font-size:14px;font-weight:700;margin-bottom:12px}
+  .opt{
+    display:block;width:100%;text-align:left;background:#f8fafc;border:1.6px solid var(--border);
+    padding:11px 14px;border-radius:10px;font-size:13.6px;margin-bottom:8px;cursor:pointer;
+    transition:.15s;font-family:inherit;color:var(--text);
+  }
+  .opt:hover{border-color:var(--excel-line);background:#f1f9f4}
+  .opt.correct{background:#dcfce7;border-color:#22c55e;font-weight:700}
+  .opt.wrong{background:#fee2e2;border-color:#ef4444}
+  .opt:disabled{cursor:default}
+  .quiz-fb{font-size:13px;margin-top:8px;font-weight:600;display:none}
+  .quiz-fb.show{display:block}
+
+  /* footer modal */
+  .modal-foot{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    padding:16px 24px;background:#f8fafc;border-top:1px solid var(--border);
+  }
+  .btn{
+    border:0;border-radius:10px;padding:11px 20px;font-size:13.5px;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:.18s;
+  }
+  .btn-main{background:var(--excel);color:#fff}
+  .btn-main:hover{background:#185c37}
+  .btn-main.is-done{background:#dcfce7;color:#166534}
+  .btn-sec{background:#fff;color:var(--text);border:1.5px solid var(--border)}
+  .btn-sec:hover{border-color:#94a3b8}
+  .btn-sec:disabled{opacity:.4;cursor:not-allowed}
+
+  /* ---------- MINI PLANILHA ---------- */
+  .mg-wrap{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:14px;margin:14px 0}
+  .mini-grid{display:grid;grid-template-columns:34px repeat(5,1fr);gap:2px;user-select:none}
+  .mg-corner{background:#e2e8f0;border-radius:4px}
+  .mg-col,.mg-row{
+    background:#e8edf2;display:grid;place-items:center;font-size:11.5px;
+    font-weight:800;color:#475569;border-radius:4px;padding:5px 0;
+  }
+  .mg-cell{
+    background:#fff;border:1px solid #e2e8f0;border-radius:4px;height:30px;cursor:pointer;
+    transition:.12s;
+  }
+  .mg-cell:hover{background:#f0fdf4;border-color:var(--excel-line)}
+  .mg-cell.sel{background:var(--excel);border-color:var(--excel);box-shadow:0 0 0 3px rgba(33,115,70,.18)}
+  .mg-status{font-size:12.5px;color:var(--muted);margin-top:10px}
+  .mg-status b{color:var(--excel);font-size:14px}
+
+  @media(max-width:640px){
+    .topbar{padding:12px 16px;gap:14px}
+    .brand p{display:none}
+    .modal-body{padding:18px}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">XL</div>
+    <div>
+      <h1>Excel do Zero</h1>
+      <p>13 aulas · trilha guiada · 100% prática</p>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="progTxt">0 de 13 aulas concluídas</span>
+      <strong id="progPct">0%</strong>
+    </div>
+    <div class="bar"><div class="fill" id="progFill"></div></div>
+  </div>
+  <button class="btn-ghost" id="resetBtn">↺ Reiniciar</button>
+</header>
+
+<main>
+  <div class="intro">
+    <div class="ico">👋</div>
+    <div>
+      <h2>Como usar este dashboard</h2>
+      <p>Clique em qualquer aula para abrir o conteúdo. Leia a explicação, faça as
+      <strong>atividades práticas no seu Excel</strong> e marque cada uma. Quando terminar,
+      clique em <strong>“Concluir aula”</strong> — seu progresso fica salvo automaticamente neste navegador.</p>
+    </div>
+  </div>
+  <div id="app"></div>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+/* =========================================================
+   1. DADOS DO CURSO
+   ========================================================= */
+const MODULOS = [
+  {id:'m1', nome:'Módulo 1 · Primeiros Passos', desc:'Conheça a tela, navegue e salve seu primeiro arquivo', icone:'🚀'},
+  {id:'m2', nome:'Módulo 2 · Deixando Bonito',  desc:'Formatação, cores, números e alinhamento', icone:'🎨'},
+  {id:'m3', nome:'Módulo 3 · Fórmulas e Funções', desc:'Cálculos, SOMA, MÉDIA, referências e SE', icone:'🧮'},
+  {id:'m4', nome:'Módulo 4 · Organização e Gráficos', desc:'Classificar, filtrar, gráficos e projeto final', icone:'📊'}
+];
+
+const AULAS = [
+/* ---------------- MÓDULO 1 ---------------- */
+{
+  id:'a1', mod:'m1', n:1, icone:'🖥️', titulo:'Conhecendo a tela do Excel', dur:'15 min',
+  objetivo:'Identificar os elementos principais da janela do Excel e entender o que é uma célula.',
+  conteudo:[
+    {tipo:'p', texto:'O Excel é uma <strong>folha de cálculo</strong>: uma grade gigante formada por linhas e colunas onde você guarda e organiza informações.'},
+    {tipo:'lista', itens:[
+      '<strong>Colunas</strong> — letras no topo (A, B, C, D...).',
+      '<strong>Linhas</strong> — números na lateral (1, 2, 3, 4...).',
+      '<strong>Célula</strong> — o cruzamento de uma coluna com uma linha. A célula da coluna C com a linha 5 se chama <strong>C5</strong>.',
+      '<strong>Caixa de Nome</strong> — canto superior esquerdo; mostra o endereço da célula selecionada.',
+      '<strong>Barra de Fórmulas</strong> — mostra o conteúdo real da célula (útil quando o número aparece "cortado").',
+      '<strong>Abas de planilha</strong> — lá embaixo: Planilha1, Planilha2... Um arquivo pode ter várias folhas.',
+      '<strong>Faixa de Opções</strong> — o menu do topo (Página Inicial, Inserir, Fórmulas...).'
+    ]},
+    {tipo:'widget'},
+    {tipo:'dica', texto:'A célula selecionada ganha uma borda verde e o endereço dela aparece na Caixa de Nome. É assim que você sabe sempre onde está.'}
+  ],
+  atividades:[
+    'Abra o Excel e clique em <strong>Pasta de Trabalho em Branco</strong>.',
+    'Clique na célula <strong>C5</strong> e confira o endereço na Caixa de Nome.',
+    'Clique na célula <strong>B2</strong>, digite seu nome e aperte <kbd>Enter</kbd>.',
+    'Clique na aba <strong>Inserir</strong> e depois volte para <strong>Página Inicial</strong>.',
+    'Clique na aba <strong>Planilha2</strong> (rodapé) e depois volte para a Planilha1.'
+  ],
+  quiz:{q:'Qual é o endereço da célula que fica na coluna D com a linha 7?',
+        opcoes:['7D','D7','D-7','ColunaD7'], correta:1,
+        expl:'Sempre a letra da coluna vem primeiro, depois o número da linha: D7.'}
+},
+{
+  id:'a2', mod:'m1', n:2, icone:'🧭', titulo:'Navegando e selecionando células', dur:'15 min',
+  objetivo:'Movimentar-se pela planilha e selecionar células, intervalos e colunas inteiras.',
+  conteudo:[
+    {tipo:'lista', itens:[
+      '<kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> movem uma célula por vez.',
+      '<kbd>Tab</kbd> vai para a <strong>direita</strong>. <kbd>Enter</kbd> vai para <strong>baixo</strong>.',
+      '<kbd>Ctrl</kbd> + <kbd>Home</kbd> volta para a célula A1.',
+      'Segurar <kbd>Shift</kbd> e usar as setas <strong>seleciona um bloco</strong> de células.',
+      'Clicar na <strong>letra da coluna</strong> seleciona a coluna inteira; no número da linha, a linha inteira.',
+      '<kbd>Ctrl</kbd> + <kbd>A</kbd> seleciona tudo.'
+    ]},
+    {tipo:'dica', texto:'Para selecionar um bloco grande, clique na primeira célula, segure Shift e clique na última. É mais rápido que arrastar.'},
+    {tipo:'p', texto:'Um <strong>intervalo</strong> (várias células juntas) é escrito com dois-pontos: <strong>A1:C5</strong> significa "de A1 até C5".'}
+  ],
+  atividades:[
+    'Use as setas do teclado para ir de A1 até E5.',
+    'Clique em A1, segure <kbd>Shift</kbd> e clique em C3 — você selecionou o bloco A1:C3.',
+    'Clique na letra <strong>B</strong> no topo para selecionar a coluna inteira.',
+    'Pressione <kbd>Ctrl</kbd>+<kbd>Home</kbd> para voltar ao início.',
+    'Pressione <kbd>Ctrl</kbd>+<kbd>A</kbd> e observe a seleção completa.'
+  ],
+  quiz:{q:'Qual tecla move a seleção para a célula à direita?',
+        opcoes:['Enter','Tab','Shift','Esc'], correta:1,
+        expl:'Tab anda para a direita e Enter para baixo — perfeito para preencher tabelas.'}
+},
+{
+  id:'a3', mod:'m1', n:3, icone:'💾', titulo:'Digitando dados e salvando', dur:'15 min',
+  objetivo:'Digitar textos e números, editar conteúdo e salvar o arquivo corretamente.',
+  conteudo:[
+    {tipo:'p', texto:'Clique na célula e simplesmente digite. Aperte <kbd>Enter</kbd> para confirmar.'},
+    {tipo:'lista', itens:[
+      '<strong>Texto</strong> alinha automaticamente à <strong>esquerda</strong>.',
+      '<strong>Número</strong> alinha automaticamente à <strong>direita</strong>.',
+      'Para <strong>editar</strong> uma célula já preenchida: clique nela e aperte <kbd>F2</kbd> (ou dê duplo clique).',
+      '<kbd>Delete</kbd> apaga o conteúdo da célula selecionada.',
+      'Para salvar: <kbd>Ctrl</kbd>+<kbd>B</kbd> (no Excel em português) ou menu <strong>Arquivo &gt; Salvar</strong>.'
+    ]},
+    {tipo:'alerta', texto:'Atenção: no Excel em português, <kbd>Ctrl</kbd>+<kbd>B</kbd> é SALVAR (e não negrito, como em outros programas). O negrito é <kbd>Ctrl</kbd>+<kbd>N</kbd>.'},
+    {tipo:'dica', texto:'Se um número aparecer alinhado à esquerda, o Excel entendeu que é texto. Isso quebra fórmulas! Corrija apagando e digitando de novo sem espaços.'}
+  ],
+  atividades:[
+    'Na coluna <strong>A</strong>, digite 5 nomes de pessoas (um por linha).',
+    'Na coluna <strong>B</strong>, ao lado de cada nome, digite a idade de cada um.',
+    'Perceba: os nomes ficam à esquerda e as idades à direita. Por quê?',
+    'Clique em uma célula e aperte <kbd>F2</kbd> para editar o texto.',
+    'Salve o arquivo com o nome <strong>Aula03.xlsx</strong> na sua pasta.'
+  ],
+  quiz:{q:'Se um dado aparece alinhado à esquerda na célula, o Excel provavelmente o entendeu como:',
+        opcoes:['Número','Data','Texto','Fórmula'], correta:2,
+        expl:'Números vão para a direita; textos vão para a esquerda. É o primeiro sinal de dado "errado".'}
+},
+
+/* ---------------- MÓDULO 2 ---------------- */
+{
+  id:'a4', mod:'m2', n:4, icone:'🎨', titulo:'Negrito, cores e bordas', dur:'15 min',
+  objetivo:'Destacar informações usando formatação de fonte, preenchimento e bordas.',
+  conteudo:[
+    {tipo:'p', texto:'Todos esses botões ficam na aba <strong>Página Inicial</strong>, no grupo <strong>Fonte</strong>.'},
+    {tipo:'lista', itens:[
+      '<strong>Negrito</strong> — <kbd>Ctrl</kbd>+<kbd>N</kbd> ou o botão <strong>N</strong>.',
+      '<strong>Itálico</strong> — <kbd>Ctrl</kbd>+<kbd>I</kbd> ou o botão <strong>I</strong>.',
+      '<strong>Sublinhado</strong> — <kbd>Ctrl</kbd>+<kbd>S</kbd> ou o botão <strong>S</strong>.',
+      '<strong>Cor de preenchimento</strong> — o "balde de tinta" pinta o <em>fundo</em> da célula.',
+      '<strong>Cor da fonte</strong> — o "A" com uma barrinha colorida muda a cor da <em>letra</em>.',
+      '<strong>Bordas</strong> — o ícone de quadriculado desenha linhas em volta das células.'
+    ]},
+    {tipo:'dica', texto:'Um cabeçalho bonito faz toda diferença: fundo escuro + letra branca em negrito. Deixa a tabela profissional na hora.'}
+  ],
+  atividades:[
+    'Digite <strong>Nome</strong> em A1 e <strong>Idade</strong> em B1.',
+    'Deixe A1 e B1 em <strong>negrito</strong>.',
+    'Pinte o fundo de A1:B1 com um azul escuro e mude a fonte para branco.',
+    'Selecione A1:B6 e aplique <strong>Todas as Bordas</strong>.',
+    'Use o botão de cor de preenchimento para destacar a célula com a maior idade em amarelo.'
+  ],
+  quiz:{q:'Qual botão pinta o FUNDO da célula?',
+        opcoes:['Cor da fonte (A)','Cor de preenchimento (balde)','Bordas','Negrito'], correta:1,
+        expl:'O balde de tinta = cor de preenchimento (fundo). O "A" colorido = cor da letra.'}
+},
+{
+  id:'a5', mod:'m2', n:5, icone:'💰', titulo:'Moeda, porcentagem e datas', dur:'20 min',
+  objetivo:'Aplicar formatos numéricos para que os números façam sentido.',
+  conteudo:[
+    {tipo:'p', texto:'O valor digitado continua o mesmo — só a <strong>aparência</strong> muda. Isso se chama <strong>formato de número</strong>.'},
+    {tipo:'lista', itens:[
+      '<strong>Moeda (R$)</strong> — 1234,5 vira R$ 1.234,50.',
+      '<strong>Porcentagem</strong> — 0,25 vira 25%. O Excel guarda o número "de verdade" (0,25).',
+      '<strong>Data</strong> — digite 25/12/2024 e o Excel reconhece como data.',
+      '<strong>Aumentar / Diminuir casas decimais</strong> — os botões <em>.00 → .0</em> na faixa de opções.',
+      '<strong>Separador de milhar</strong> — a vírgula nos milhares.'
+    ]},
+    {tipo:'alerta', texto:'Nunca digite "R$" junto com o número! Digite só 1234,5 e aplique o formato de moeda. Se digitar o símbolo, o Excel trata como texto e a fórmula não funciona.'},
+    {tipo:'dica', texto:'Atalhos úteis: <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>%</kbd> aplica porcentagem, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>$</kbd> aplica moeda.'}
+  ],
+  atividades:[
+    'Digite <strong>1234,5</strong> em A1 e formate como moeda (R$).',
+    'Digite <strong>0,25</strong> em A2 e formate como porcentagem — observe que aparece 25%.',
+    'Digite <strong>25/12/2024</strong> em A3 e veja o formato de data.',
+    'Aumente e diminua as casas decimais de A1 usando os botões.',
+    'Crie uma mini-tabela: Produto / Preço / Desconto (em %) com 3 produtos.'
+  ],
+  quiz:{q:'Se você digitar 0,5 e aplicar o formato de porcentagem, o que aparece?',
+        opcoes:['0,5%','5%','50%','500%'], correta:2,
+        expl:'0,5 é metade de 1, ou seja, 50%. O Excel converte multiplicando por 100 na exibição.'}
+},
+{
+  id:'a6', mod:'m2', n:6, icone:'📐', titulo:'Largura, alinhamento e mesclar', dur:'15 min',
+  objetivo:'Ajustar a aparência da planilha para que o conteúdo fique legível e organizado.',
+  conteudo:[
+    {tipo:'lista', itens:[
+      '<strong>Alargar coluna</strong> — arraste a divisa entre as letras das colunas.',
+      '<strong>Ajuste automático</strong> — dê <strong>duplo clique</strong> na divisa entre as colunas. O Excel ajusta sozinho.',
+      '<strong>Alinhamento</strong> — esquerda / centro / direita e topo / meio / baixo (grupo Alinhamento).',
+      '<strong>Mesclar e Centralizar</strong> — junta várias células em uma só. Ótimo para títulos.',
+      '<strong>Quebrar Texto</strong> — faz o texto longo descer dentro da própria célula.'
+    ]},
+    {tipo:'alerta', texto:'Evite mesclar células em tabelas de dados! Isso atrapalha filtros, fórmulas e classificação. Use mesclar apenas em títulos.'}
+  ],
+  atividades:[
+    'Digite um texto longo em A1 (ex.: "Relatório de vendas do primeiro semestre").',
+    'Aplique <strong>Quebrar Texto</strong> e veja o texto descer.',
+    'Ajuste a largura da coluna com <strong>duplo clique</strong> na divisa entre A e B.',
+    'Selecione A1:D1, clique em <strong>Mesclar e Centralizar</strong> e deixe o título em negrito.',
+    'Alinhe ao centro todos os valores de uma linha.'
+  ],
+  quiz:{q:'Qual é o jeito mais rápido de ajustar a largura da coluna ao conteúdo?',
+        opcoes:['Arrastar a divisa devagar','Duplo clique na divisa entre as colunas','Digitar a largura manualmente','Usar mesclar'], correta:1,
+        expl:'Duplo clique na divisa = ajuste automático, o famoso "autofit".'}
+},
+
+/* ---------------- MÓDULO 3 ---------------- */
+{
+  id:'a7', mod:'m3', n:7, icone:'🟰', titulo:'Sua primeira fórmula', dur:'20 min',
+  objetivo:'Entender que toda fórmula começa com = e realizar operações matemáticas básicas.',
+  conteudo:[
+    {tipo:'p', texto:'Fórmula é uma <strong>ordem de cálculo</strong> que você dá ao Excel. Toda fórmula começa com o sinal de <strong>igual (=)</strong>.'},
+    {tipo:'codigo', texto:'=A1+A2'},
+    {tipo:'lista', itens:[
+      '<strong>+</strong> soma &nbsp;·&nbsp; <strong>-</strong> subtração &nbsp;·&nbsp; <strong>*</strong> multiplicação &nbsp;·&nbsp; <strong>/</strong> divisão',
+      'Você pode escrever <strong>=10+5</strong> ou usar células: <strong>=A1+A2</strong>.',
+      'Use células sempre que possível: assim, se o valor mudar, o resultado se atualiza sozinho.',
+      'Se esquecer o <strong>=</strong>, o Excel acha que é texto e não calcula.'
+    ]},
+    {tipo:'dica', texto:'O Excel respeita a ordem matemática: primeiro <strong>*</strong> e <strong>/</strong>, depois <strong>+</strong> e <strong>-</strong>. Use parênteses para controlar: <strong>=(A1+A2)*2</strong>.'}
+  ],
+  atividades:[
+    'Coloque <strong>10</strong> em A1 e <strong>5</strong> em A2.',
+    'Em A3 digite <strong>=A1+A2</strong> e aperte Enter → deve aparecer 15.',
+    'Em A4 digite <strong>=A1*A2</strong> → deve aparecer 50.',
+    'Em A5 digite <strong>=(A1+A2)*2</strong> → deve aparecer 30.',
+    'Agora mude A1 para 20 e veja A3, A4 e A5 se atualizarem automaticamente.'
+  ],
+  quiz:{q:'Como toda fórmula no Excel precisa começar?',
+        opcoes:['Com +','Com =','Com @','Com a palavra Fórmula'], correta:1,
+        expl:'O sinal de igual (=) avisa ao Excel: "o que vem a seguir é um cálculo".'}
+},
+{
+  id:'a8', mod:'m3', n:8, icone:'📊', titulo:'SOMA, MÉDIA, MÁXIMO e MÍNIMO', dur:'20 min',
+  objetivo:'Usar as quatro funções mais importantes do dia a dia.',
+  conteudo:[
+    {tipo:'p', texto:'Funções são fórmulas prontas. Você digita o nome e escolhe o <strong>intervalo</strong> de células.'},
+    {tipo:'codigo', texto:'=SOMA(A1:A10)   → soma tudo de A1 até A10\n=MÉDIA(A1:A10)  → média aritmética\n=MÁXIMO(A1:A10) → maior valor\n=MÍNIMO(A1:A10) → menor valor'},
+    {tipo:'lista', itens:[
+      'Os <strong>dois-pontos (:)</strong> significam "até". <strong>A1:A10</strong> = de A1 até A10.',
+      'A <strong>vírgula (ou ponto e vírgula)</strong> separa vários pedaços: <strong>=SOMA(A1:A5;C1:C5)</strong>.',
+      'Dica de ouro: selecione um grupo de números e olhe a <strong>barra de status</strong> no rodapé — o Excel já mostra soma, média e contagem.'
+    ]},
+    {tipo:'dica', texto:'Digite <strong>=SOM</strong> e aperte <kbd>Tab</kbd>: o Excel autocompleta a função. Depois selecione o intervalo com o mouse.'}
+  ],
+  atividades:[
+    'Crie uma lista com 6 notas na coluna A (ex.: 7, 8, 6, 9, 10, 5).',
+    'Em B1 escreva <strong>=SOMA(A1:A6)</strong> e veja o total.',
+    'Em B2 escreva <strong>=MÉDIA(A1:A6)</strong>.',
+    'Em B3 escreva <strong>=MÁXIMO(A1:A6)</strong> e em B4 <strong>=MÍNIMO(A1:A6)</strong>.',
+    'Selecione as 6 notas e confira os resultados na barra de status lá embaixo.'
+  ],
+  quiz:{q:'O que significa o intervalo A1:A6?',
+        opcoes:['Só a célula A1 e A6','Da célula A1 até a célula A6 (todas as 6)','A coluna A dividida por 6','A1 menos A6'], correta:1,
+        expl:'Os dois-pontos criam um intervalo: A1, A2, A3, A4, A5 e A6.'}
+},
+{
+  id:'a9', mod:'m3', n:9, icone:'🔒', titulo:'Referência relativa e absoluta ($)', dur:'20 min',
+  objetivo:'Entender por que a fórmula muda ao copiar e como travar uma célula com o cifrão.',
+  conteudo:[
+    {tipo:'p', texto:'Quando você <strong>copia uma fórmula para baixo</strong>, o Excel ajusta as referências sozinho. Isso é a <strong>referência relativa</strong>.'},
+    {tipo:'lista', itens:[
+      'Se em B1 você tem <strong>=A1*2</strong> e copia para B2, vira <strong>=A2*2</strong>. Isso é ótimo na maioria das vezes.',
+      'Mas se você quer que uma célula <strong>nunca mude</strong>, trave com cifrão: <strong>$A$1</strong>.',
+      '<strong>$A$1</strong> — trava coluna e linha (absoluta).',
+      '<strong>A$1</strong> — trava só a linha. &nbsp; <strong>$A1</strong> — trava só a coluna.',
+      'Atalho: com o cursor sobre a referência, aperte <kbd>F4</kbd> para alternar entre os tipos.'
+    ]},
+    {tipo:'codigo', texto:'=A2*$F$1\n(A2 muda ao copiar, $F$1 fica travada)'},
+    {tipo:'dica', texto:'Use referência absoluta sempre que houver um valor "fixo" — um desconto, uma taxa, um salário mínimo, uma meta.'}
+  ],
+  atividades:[
+    'Em F1 digite <strong>10%</strong> (digite 0,1 e formate como porcentagem).',
+    'Na coluna A coloque 5 valores de produtos (ex.: 100, 250, 80, 400, 150).',
+    'Em B1 escreva <strong>=A1*$F$1</strong> — isso calcula 10% do valor.',
+    'Copie B1 e cole em B2 até B5 — observe que F1 permaneceu travada.',
+    'Agora teste sem o cifrão (<strong>=A1*F1</strong>) copiando para baixo e veja o erro acontecer.'
+  ],
+  quiz:{q:'Qual referência NÃO muda ao copiar a fórmula para outra célula?',
+        opcoes:['A1','$A$1','A$1','$A1'], correta:1,
+        expl:'$A$1 é absoluta: coluna e linha travadas. As outras mudam em pelo menos uma direção.'}
+},
+{
+  id:'a10', mod:'m3', n:10, icone:'🤔', titulo:'Função SE (decisões automáticas)', dur:'25 min',
+  objetivo:'Fazer o Excel tomar decisões usando a função SE.',
+  conteudo:[
+    {tipo:'p', texto:'A função <strong>SE</strong> testa uma condição e devolve uma resposta se ela for verdadeira e outra se for falsa.'},
+    {tipo:'codigo', texto:'=SE(teste ; valor_se_verdadeiro ; valor_se_falso)'},
+    {tipo:'codigo', texto:'=SE(B2>=7;"Aprovado";"Reprovado")'},
+    {tipo:'lista', itens:[
+      'Comparadores: <strong>&gt;</strong> maior, <strong>&lt;</strong> menor, <strong>&gt;=</strong> maior ou igual, <strong>&lt;=</strong> menor ou igual, <strong>=</strong> igual, <strong>&lt;&gt;</strong> diferente.',
+      'Textos vão sempre <strong>entre aspas</strong>: "Aprovado".',
+      'Números vão sem aspas: 7, 100, 0.',
+      'Pode-se colocar outra fórmula no lugar da resposta (SE dentro de SE).'
+    ]},
+    {tipo:'alerta', texto:'Se aparecer erro <strong>#NOME?</strong>, provavelmente faltaram as aspas em um texto. Se aparecer <strong>#VALOR!</strong>, pode haver texto onde deveria haver número.'}
+  ],
+  atividades:[
+    'Monte uma tabela: coluna A = nomes de 5 alunos, coluna B = notas.',
+    'Em C2 escreva <strong>=SE(B2>=7;"Aprovado";"Reprovado")</strong>.',
+    'Copie a fórmula para C3 até C6.',
+    'Crie uma coluna D com <strong>=SE(B2>=7;"OK";"Recuperação")</strong> para comparar.',
+    'Mude uma nota para 6 e observe a resposta mudar automaticamente.'
+  ],
+  quiz:{q:'Na função SE, o que deve ficar entre aspas?',
+        opcoes:['Os números','Os textos','As células','As funções'], correta:1,
+        expl:'Textos sempre entre aspas ("Aprovado"). Números e referências de célula vão sem aspas.'}
+},
+
+/* ---------------- MÓDULO 4 ---------------- */
+{
+  id:'a11', mod:'m4', n:11, icone:'🔎', titulo:'Classificar e filtrar dados', dur:'20 min',
+  objetivo:'Organizar uma tabela grande e mostrar apenas o que interessa.',
+  conteudo:[
+    {tipo:'p', texto:'Com muitos dados, duas ferramentas salvam o dia: <strong>classificar</strong> (colocar em ordem) e <strong>filtrar</strong> (esconder o que não interessa).'},
+    {tipo:'lista', itens:[
+      '<strong>Classificar</strong> — aba <strong>Dados &gt; Classificar</strong>. Ordene de A a Z, de Z a A, do maior para o menor.',
+      '<strong>Filtrar</strong> — aba <strong>Dados &gt; Filtrar</strong> (ou <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>). Aparecem setinhas nos títulos.',
+      'Clique na setinha e escolha o que quer ver. O resto fica escondido (não é apagado!).',
+      'Para remover o filtro: clique na setinha &gt; <strong>Limpar filtro</strong>.'
+    ]},
+    {tipo:'dica', texto:'Antes de classificar, selecione a tabela INTEIRA (ou clique em uma célula dela) — se classificar só uma coluna, os dados se misturam e a tabela "quebra".'}
+  ],
+  atividades:[
+    'Crie uma tabela com as colunas <strong>Nome | Cidade | Idade</strong> e preencha 8 linhas.',
+    'Selecione a tabela e classifique por <strong>Idade do maior para o menor</strong>.',
+    'Ative o <strong>Filtro</strong> (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>).',
+    'Filtre apenas as pessoas de uma cidade.',
+    'Limpe o filtro e confira que todos os dados continuam lá.'
+  ],
+  quiz:{q:'Em qual aba do Excel fica o botão Filtrar?',
+        opcoes:['Página Inicial','Inserir','Dados','Revisão'], correta:2,
+        expl:'Dados &gt; Filtrar. Atalho: Ctrl+Shift+L.'}
+},
+{
+  id:'a12', mod:'m4', n:12, icone:'📈', titulo:'Criando gráficos', dur:'20 min',
+  objetivo:'Transformar números em gráficos claros e escolher o tipo certo para cada situação.',
+  conteudo:[
+    {tipo:'p', texto:'Gráfico é a forma mais rápida de mostrar um padrão. O caminho é sempre: <strong>selecione os dados &gt; Inserir &gt; escolha o gráfico</strong>.'},
+    {tipo:'lista', itens:[
+      '<strong>Colunas / Barras</strong> — comparar valores entre categorias.',
+      '<strong>Linhas</strong> — mostrar evolução ao longo do tempo (meses, anos).',
+      '<strong>Pizza</strong> — mostrar a participação de cada parte em um total (cuidado: no máximo 5 fatias).',
+      'Depois de criado, clique no gráfico para abrir as abas <strong>Design do Gráfico</strong> e <strong>Formatar</strong>.',
+      'Você pode mudar título, cores, rótulos de dados e o tipo do gráfico.'
+    ]},
+    {tipo:'dica', texto:'Inclua sempre a linha de cabeçalho na seleção — é ela que dá nome às séries e aos eixos do gráfico.'}
+  ],
+  atividades:[
+    'Crie uma tabela com <strong>Mês</strong> e <strong>Vendas</strong> para 6 meses.',
+    'Selecione a tabela inteira (com o cabeçalho).',
+    'Vá em <strong>Inserir &gt; Gráfico de Colunas &gt; Colunas Agrupadas</strong>.',
+    'Clique no título do gráfico e escreva "Vendas por mês".',
+    'Clique com o botão direito no gráfico &gt; <strong>Alterar Tipo de Gráfico</strong> &gt; escolha <strong>Linhas</strong>.',
+    'Crie também um gráfico de <strong>Pizza</strong> com os mesmos dados e compare.'
+  ],
+  quiz:{q:'Qual gráfico é mais indicado para mostrar a participação de cada parte em um total?',
+        opcoes:['Linhas','Colunas','Pizza','Dispersão'], correta:2,
+        expl:'A pizza mostra proporções de um total (100%). Use com poucas categorias.'}
+},
+{
+  id:'a13', mod:'m4', n:13, icone:'🏆', titulo:'Projeto final: controle de gastos', dur:'30 min',
+  objetivo:'Juntar tudo o que aprendeu em uma planilha completa e útil de verdade.',
+  conteudo:[
+    {tipo:'p', texto:'Agora você vai construir uma <strong>planilha de controle de gastos pessoais</strong> usando todos os recursos do curso.'},
+    {tipo:'lista', itens:[
+      '<strong>Formatação</strong> — cabeçalho colorido, negrito e bordas (Aula 4).',
+      '<strong>Formato de moeda</strong> nos valores (Aula 5).',
+      '<strong>Ajuste de largura</strong> para caber a descrição (Aula 6).',
+      '<strong>=SOMA()</strong> para o total geral (Aula 8).',
+      '<strong>=MÉDIA()</strong> para o gasto médio (Aula 8).',
+      '<strong>=SE()</strong> para sinalizar gastos acima do limite (Aula 10).',
+      '<strong>Filtro</strong> por categoria (Aula 11).',
+      '<strong>Gráfico</strong> de gastos por categoria (Aula 12).'
+    ]},
+    {tipo:'dica', texto:'Parabéns! Se você chegou até aqui fazendo as atividades, já domina o essencial do Excel usado em 90% dos trabalhos. Continue praticando com planilhas do seu dia a dia.'}
+  ],
+  atividades:[
+    'Crie as colunas: <strong>Data | Descrição | Categoria | Valor</strong>.',
+    'Preencha 10 lançamentos fictícios (mercado, transporte, lazer, contas...).',
+    'Formate a coluna Valor como <strong>moeda (R$)</strong>.',
+    'Deixe o cabeçalho em negrito, com fundo escuro e letra branca, e aplique bordas.',
+    'Abaixo da tabela, calcule <strong>=SOMA(D2:D11)</strong> e <strong>=MÉDIA(D2:D11)</strong>.',
+    'Crie a coluna E com <strong>=SE(D2>500;"Acima do limite";"OK")</strong> e copie para baixo.',
+    'Ative o <strong>filtro</strong> e filtre por uma categoria.',
+    'Insira um <strong>gráfico de colunas</strong> com os valores por categoria.',
+    'Salve como <strong>ControleGastos.xlsx</strong>. Pronto, você concluiu o curso! 🎉'
+  ],
+  quiz:{q:'Qual é a combinação correta para somar apenas valores que estão entre D2 e D11?',
+        opcoes:['=SOMA(D2;D11)','=SOMA(D2:D11)','=SOMA(D2-D11)','SOMA(D2:D11)'], correta:1,
+        expl:'=SOMA(D2:D11) — com o sinal de igual no início e dois-pontos para o intervalo.'}
+}
+];
+
+/* =========================================================
+   2. ESTADO / PROGRESSO
+   ========================================================= */
+const KEY = 'excelZeroDashboard_v1';
+let state = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : {aulas:{}};
+  }catch(e){ return {aulas:{}}; }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function getAulaState(id){
+  if(!state.aulas[id]) state.aulas[id] = {checks:[], quiz:null, done:false};
+  const a = AULAS.find(x=>x.id===id);
+  while(state.aulas[id].checks.length < a.atividades.length) state.aulas[id].checks.push(false);
+  return state.aulas[id];
+}
+
+/* =========================================================
+   3. RENDER DA TRILHA
+   ========================================================= */
+const app = document.getElementById('app');
+
+function renderTrilha(){
+  app.innerHTML = MODULOS.map(m=>{
+    const aulasMod = AULAS.filter(a=>a.mod===m.id);
+    const feitas = aulasMod.filter(a=>state.aulas[a.id] && state.aulas[a.id].done).length;
+    return `
+      <section class="modulo">
+        <div class="mod-head">
+          <div class="mod-ico">${m.icone}</div>
+          <div>
+            <h3>${m.nome}</h3>
+            <small>${m.desc}</small>
+          </div>
+          <div class="mod-count">${feitas}/${aulasMod.length}</div>
+        </div>
+        <div class="grid">
+          ${aulasMod.map(cardHTML).join('')}
+        </div>
+      </section>`;
+  }).join('');
+
+  app.querySelectorAll('.card').forEach(el=>{
+    el.addEventListener('click', ()=> openModal(el.dataset.id));
+  });
+  atualizarProgresso();
+}
+
+function cardHTML(a){
+  const st = getAulaState(a.id);
+  const feitasAtiv = st.checks.filter(Boolean).length;
+  const pct = Math.round((feitasAtiv / a.atividades.length) * 100);
+  return `
+    <article class="card ${st.done?'done':''}" data-id="${a.id}">
+      <div class="card-top">
+        <span class="card-ico">${a.icone}</span>
+        <span class="card-num">AULA ${String(a.n).padStart(2,'0')}</span>
+        <span class="card-check">✓</span>
+      </div>
+      <h4>${a.titulo}</h4>
+      <div class="card-foot">
+        <span class="pill">⏱ ${a.dur}</span>
+        <span class="mini"><i style="width:${pct}%"></i></span>
+        <span>${feitasAtiv}/${a.atividades.length}</span>
+      </div>
+    </article>`;
+}
+
+function atualizarProgresso(){
+  const total = AULAS.length;
+  const feitas = AULAS.filter(a=> state.aulas[a.id] && state.aulas[a.id].done).length;
+  const pct = Math.round(feitas/total*100);
+  document.getElementById('progTxt').textContent = `${feitas} de ${total} aulas concluídas`;
+  document.getElementById('progPct').textContent = pct + '%';
+  document.getElementById('progFill').style.width = pct + '%';
+}
+
+/* =========================================================
+   4. MODAL DA AULA
+   ========================================================= */
+const overlay = document.getElementById('overlay');
+const modal   = document.getElementById('modal');
+let aulaAtual = null;
+
+function openModal(id){
+  aulaAtual = AULAS.find(a=>a.id===id);
+  const st = getAulaState(id);
+  const mod = MODULOS.find(m=>m.id===aulaAtual.mod);
+  const idx = AULAS.findIndex(a=>a.id===id);
+  const prox = AULAS[idx+1];
+
+  modal.innerHTML = `
+    <div class="modal-head">
+      <div class="m-ico">${aulaAtual.icone}</div>
+      <div>
+        <h2>Aula ${aulaAtual.n} · ${aulaAtual.titulo}</h2>
+        <p>${mod.nome} &nbsp;·&nbsp; ⏱ ${aulaAtual.dur}</p>
+      </div>
+      <button class="close" id="closeBtn">×</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="obj"><strong>🎯 Objetivo:</strong> ${aulaAtual.objetivo}</div>
+
+      <div class="sec-title">📖 Conteúdo</div>
+      ${aulaAtual.conteudo.map(renderItem).join('')}
+
+      <div class="sec-title">✍️ Atividades práticas (faça no seu Excel)</div>
+      <div id="tasks">
+        ${aulaAtual.atividades.map((t,i)=>`
+          <label class="task ${st.checks[i]?'checked':''}" data-i="${i}">
+            <input type="checkbox" ${st.checks[i]?'checked':''}>
+            <span class="box">✓</span>
+            <span class="txt">${t}</span>
+          </label>`).join('')}
+      </div>
+
+      <div class="sec-title">🧠 Teste rápido</div>
+      <div class="quiz-q">${aulaAtual.quiz.q}</div>
+      <div id="quizOpts">
+        ${aulaAtual.quiz.opcoes.map((o,i)=>`
+          <button class="opt" data-i="${i}">${String.fromCharCode(65+i)}) ${o}</button>`).join('')}
+      </div>
+      <div class="quiz-fb" id="quizFb"></div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-main ${st.done?'is-done':''}" id="doneBtn">
+        ${st.done ? '✓ Aula concluída' : 'Marcar aula como concluída'}
+      </button>
+      ${prox ? `<button class="btn btn-sec" id="nextBtn">Próxima aula →</button>` : ''}
+      <span style="margin-left:auto;font-size:12px;color:#64748b">
+        ${st.checks.filter(Boolean).length}/${aulaAtual.atividades.length} atividades feitas
+      </span>
+    </div>
+  `;
+
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  bindModal();
+}
+
+function renderItem(item){
+  switch(item.tipo){
+    case 'p':      return `<p>${item.texto}</p>`;
+    case 'lista':  return `<ul>${item.itens.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+    case 'dica':   return `<div class="dica">💡 ${item.texto}</div>`;
+    case 'alerta': return `<div class="alerta">⚠️ ${item.texto}</div>`;
+    case 'codigo': return `<code class="formula">${item.texto}</code>`;
+    case 'widget': return buildMiniGrid();
+    default: return '';
+  }
+}
+
+/* ---- mini planilha interativa ---- */
+function buildMiniGrid(){
+  const cols = ['A','B','C','D','E'];
+  let h = '<div class="mg-wrap"><div class="mini-grid"><div class="mg-corner"></div>';
+  cols.forEach(c=> h += `<div class="mg-col">${c}</div>`);
+  for(let r=1;r<=5;r++){
+    h += `<div class="mg-row">${r}</div>`;
+    cols.forEach(c=> h += `<div class="mg-cell" data-ref="${c}${r}"></div>`);
+  }
+  h += '</div><div class="mg-status" id="mgStatus">👆 Clique em uma célula da mini-planilha para ver o endereço dela.</div></div>';
+  return h;
+}
+
+function bindModal(){
+  document.getElementById('closeBtn').onclick = closeModal;
+
+  /* mini grid */
+  const cells = modal.querySelectorAll('.mg-cell');
+  if(cells.length){
+    cells.forEach(c=>{
+      c.addEventListener('click', ()=>{
+        cells.forEach(x=>x.classList.remove('sel'));
+        c.classList.add('sel');
+        document.getElementById('mgStatus').innerHTML =
+          `Célula selecionada: <b>${c.dataset.ref}</b> — coluna ${c.dataset.ref[0]}, linha ${c.dataset.ref.slice(1)}.`;
+      });
+    });
+  }
+
+  /* checklist */
+  const st = getAulaState(aulaAtual.id);
+  modal.querySelectorAll('.task').forEach(t=>{
+    t.addEventListener('click', e=>{
+      e.preventDefault();
+      const i = +t.dataset.i;
+      st.checks[i] = !st.checks[i];
+      t.classList.toggle('checked', st.checks[i]);
+      save();
+      const feitas = st.checks.filter(Boolean).length;
+      modal.querySelector('.modal-foot span').textContent =
+        `${feitas}/${aulaAtual.atividades.length} atividades feitas`;
+    });
+  });
+
+  /* quiz */
+  const opts = modal.querySelectorAll('.opt');
+  const fb = document.getElementById('quizFb');
+  const correta = aulaAtual.quiz.correta;
+
+  opts.forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const i = +b.dataset.i;
+      opts.forEach(o=> o.disabled = true);
+      opts[correta].classList.add('correct');
+      if(i !== correta) b.classList.add('wrong');
+      fb.textContent = (i===correta ? '✅ Correto! ' : '❌ Quase! ') + aulaAtual.quiz.expl;
+      fb.style.color = i===correta ? '#166534' : '#b91c1c';
+      fb.classList.add('show');
+      st.quiz = i; save();
+    });
+  });
+
+  /* botão concluir */
+  const doneBtn = document.getElementById('doneBtn');
+  doneBtn.onclick = ()=>{
+    st.done = !st.done;
+    save();
+    doneBtn.classList.toggle('is-done', st.done);
+    doneBtn.textContent = st.done ? '✓ Aula concluída' : 'Marcar aula como concluída';
+    renderTrilha();
+  };
+
+  /* próxima */
+  const nextBtn = document.getElementById('nextBtn');
+  if(nextBtn) nextBtn.onclick = ()=>{
+    const idx = AULAS.findIndex(a=>a.id===aulaAtual.id);
+    closeModal();
+    setTimeout(()=> openModal(AULAS[idx+1].id), 180);
+  };
+}
+
+function closeModal(){
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  renderTrilha();
+}
+
+overlay.addEventListener('click', e=>{ if(e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ---- reset ---- */
+document.getElementById('resetBtn').onclick = ()=>{
+  if(confirm('Tem certeza que deseja apagar todo o seu progresso?')){
+    state = {aulas:{}};
+    save();
+    renderTrilha();
+  }
+};
+
+/* ---- start ---- */
+renderTrilha();
+</script>
+</body>
+</html>
